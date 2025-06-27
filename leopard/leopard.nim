@@ -48,8 +48,8 @@ type
 
 func encode*(
   self: var LeoEncoder,
-  data,parity: ptr UncheckedArray[ptr UncheckedArray[byte]],
-  dataLen,parityLen: int ): Result[void, cstring] =
+  data,
+  parity: var openArray[seq[byte]]): Result[void, cstring] =
   ## Encode a list of buffers in `data` into a number of `bufSize` sized
   ## `parity` buffers
   ##
@@ -57,10 +57,10 @@ func encode*(
   ## `parity` - list of parity `buffers` of size `bufSize`
   ##
 
-  if dataLen != self.buffers:
+  if data.len != self.buffers:
     return err("Number of data buffers should match!")
 
-  if parityLen != self.parity:
+  if parity.len != self.parity:
     return err("Number of parity buffers should match!")
 
   # zero encode work buffer to avoid corrupting with previous run
@@ -68,7 +68,7 @@ func encode*(
     zeroMem(self.workBufferPtr[i], self.bufSize)
 
   # copy data into aligned buffer
-  for i in 0..<dataLen:
+  for i in 0..<data.len:
     copyMem(self.dataBufferPtr[i], addr data[i][0], self.bufSize)
 
   let
@@ -83,8 +83,8 @@ func encode*(
   if ord(res) != ord(LeopardSuccess):
     return err(leoResultString(res.LeopardResult))
 
-  for i in 0..<parityLen:
-    copyMem(parity[i], self.workBufferPtr[i], self.bufSize)
+  for i in 0..<parity.len:
+    copyMem(addr parity[i][0], self.workBufferPtr[i], self.bufSize)
 
   return ok()
 
@@ -92,8 +92,7 @@ func decode*(
   self: var LeoDecoder,
   data,
   parity,
-  recovered: ptr UncheckedArray[ptr UncheckedArray[byte]],
-  dataLen,parityLen,recoveredLen: int): Result[void, cstring] =
+  recovered: var openArray[seq[byte]]): Result[void, cstring] =
   ## Decode a list of buffers in `data` and `parity` into a list
   ## of `recovered` buffers of `bufSize`. The list of `recovered`
   ## buffers should be match the `Leo.buffers`
@@ -103,13 +102,13 @@ func decode*(
   ## `recovered`  - list of recovered `buffers` of size `bufSize`
   ##
 
-  if dataLen != self.buffers:
+  if data.len != self.buffers:
     return err("Number of data buffers should match!")
 
-  if parityLen != self.parity:
+  if parity.len != self.parity:
     return err("Number of parity buffers should match!")
 
-  if recoveredLen != self.buffers:
+  if recovered.len != self.buffers:
     return err("Number of recovered buffers should match buffers!")
 
   # clean out work and data buffers
@@ -119,25 +118,25 @@ func decode*(
   for i in 0..<self.decodeBufferCount:
     zeroMem(self.decodeBufferPtr[i], self.bufSize)
 
-  for i in 0..<dataLen:
+  for i in 0..<data.len:
     zeroMem(self.dataBufferPtr[i], self.bufSize)
 
   # this is needed because erasures are nil pointers
   var
-    dataPtr = newSeq[LeoBufferPtr](dataLen)
+    dataPtr = newSeq[LeoBufferPtr](data.len)
     parityPtr = newSeq[LeoBufferPtr](self.workBufferCount)
 
   # copy data into aligned buffer
-  for i in 0..<dataLen:
-    if not data[i].isNil:
-      copyMem(self.dataBufferPtr[i],addr data[i][0], self.bufSize)
+  for i in 0..<data.len:
+    if data[i].len > 0:
+      copyMem(self.dataBufferPtr[i], addr data[i][0], self.bufSize)
       dataPtr[i] = self.dataBufferPtr[i]
     else:
       dataPtr[i] = nil
 
   # copy parity into aligned buffer
   for i in 0..<self.workBufferCount:
-    if i < parityLen and not parity[i].isNil:
+    if i < parity.len and parity[i].len > 0:
       copyMem(self.workBufferPtr[i], addr parity[i][0], self.bufSize)
       parityPtr[i] = self.workBufferPtr[i]
     else:

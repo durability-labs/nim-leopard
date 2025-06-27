@@ -6,17 +6,15 @@ import ../leopard
 proc randomCRCPacket*(data: var openArray[byte]) =
   if data.len < 16:
     data[0] = rand(data.len).byte
-    for i in 1..<data.len:
+    for i in 1 ..< data.len:
       data[i] = data[0]
   else:
-    let
-      len: uint32 = data.len.uint32
+    let len: uint32 = data.len.uint32
 
     copyMem(addr data[0], unsafeAddr len, sizeof(len))
-    var
-      crc = data.len.uint32
+    var crc = data.len.uint32
 
-    for i in 8..<data.len:
+    for i in 8 ..< data.len:
       let v = rand(data.len).byte
       data[i] = v
       crc = (crc shl 3) and (crc shr (32 - 3))
@@ -26,7 +24,7 @@ proc randomCRCPacket*(data: var openArray[byte]) =
 
 proc checkCRCPacket*(data: openArray[byte]): bool =
   if data.len < 16:
-    for d in data[1..data.high]:
+    for d in data[1 .. data.high]:
       if d != data[0]:
         raise (ref Defect)(msg: "Packet don't match")
   else:
@@ -39,7 +37,7 @@ proc checkCRCPacket*(data: openArray[byte]): bool =
     if packSize != data.len.uint:
       raise (ref Defect)(msg: "Packet size don't match!")
 
-    for i in 4..<data.len:
+    for i in 4 ..< data.len:
       let v = data[i]
       crc = (crc shl 3) and (crc shr (32 - 3))
       crc += v
@@ -56,36 +54,32 @@ proc dropRandomIdx*(bufs: var openArray[seq[byte]], dropCount: int) =
     size = bufs.len
 
   while count < dropCount:
-    let i = rand(0..<size)
+    let i = rand(0 ..< size)
     if dups.find(i) == -1:
       dups.add(i)
       bufs[i].setLen(0)
       count.inc
 
 proc testPackets*(
-  buffers,
-  parity,
-  bufSize,
-  dataLosses: int,
-  parityLosses: int,
-  encoder: var LeoEncoder,
-  decoder: var LeoDecoder): Result[void, cstring] =
-
+    buffers, parity, bufSize, dataLosses: int,
+    parityLosses: int,
+    encoder: var LeoEncoder,
+    decoder: var LeoDecoder,
+): Result[void, cstring] =
   var
     dataBuf = newSeqOfCap[seq[byte]](buffers)
     parityBuf = newSeqOfCap[seq[byte]](parity)
     recoveredBuf = newSeqOfCap[seq[byte]](buffers)
 
-  for _ in 0..<buffers:
-    var
-      dataSeq = newSeq[byte](bufSize)
+  for _ in 0 ..< buffers:
+    var dataSeq = newSeq[byte](bufSize)
 
     randomCRCPacket(dataSeq)
     dataBuf.add(dataSeq)
 
     recoveredBuf.add(newSeq[byte](bufSize))
 
-  for _ in 0..<parity:
+  for _ in 0 ..< parity:
     parityBuf.add(newSeq[byte](bufSize))
 
   encoder.encode(dataBuf, parityBuf).tryGet()

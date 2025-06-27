@@ -18,15 +18,15 @@ suite "Leopard Parametrization":
   test "Should not allow invalid data/parity buffer counts":
     check:
       LeoEncoder.init(64, 1, 2).error ==
-      "number of parity buffers cannot exceed number of data buffers!"
+        "number of parity buffers cannot exceed number of data buffers!"
 
   test "Should not allow data + parity to exceed 65536":
     check:
       LeoEncoder.init(64, 65536 + 1, 0).error ==
-      "number of parity and data buffers cannot exceed 65536!"
+        "number of parity and data buffers cannot exceed 65536!"
 
       LeoEncoder.init(64, 32768 + 1, 32768).error ==
-      "number of parity and data buffers cannot exceed 65536!"
+        "number of parity and data buffers cannot exceed 65536!"
 
   test "Should not allow encoding with invalid data buffer counts":
     var
@@ -64,7 +64,8 @@ suite "Leopard Parametrization":
       recovered = newSeq[seq[byte]](3)
 
     check:
-      leo.decode(data, parity, recovered).error == "Number of parity buffers should match!"
+      leo.decode(data, parity, recovered).error ==
+        "Number of parity buffers should match!"
 
   test "Should not allow decoding with invalid data buffer counts":
     var
@@ -74,7 +75,8 @@ suite "Leopard Parametrization":
       recovered = newSeq[seq[byte]](3)
 
     check:
-      leo.decode(data, parity, recovered).error == "Number of recovered buffers should match buffers!"
+      leo.decode(data, parity, recovered).error ==
+        "Number of recovered buffers should match buffers!"
 
 suite "Leopard simple Encode/Decode":
   const
@@ -102,15 +104,14 @@ suite "Leopard simple Encode/Decode":
     decoder.free()
 
   test "Test 2 data loses out of 4 possible":
-    for i in 0..<DataCount:
+    for i in 0 ..< DataCount:
       data[i] = newSeq[byte](BufferSize)
       recovered[i] = newSeq[byte](BufferSize)
-      var
-        str = TestString & " " & $i
+      var str = TestString & " " & $i
 
       copyMem(addr data[i][0], addr str[0], str.len)
 
-    for i in 0..<ParityCount:
+    for i in 0 ..< ParityCount:
       parity[i] = newSeq[byte](BufferSize)
 
     encoder.encode(data, parity).tryGet()
@@ -128,22 +129,20 @@ suite "Leopard simple Encode/Decode":
     check recovered[1] == data2
 
   test "Test 1 data and 1 parity loss out of 4 possible":
-    for i in 0..<DataCount:
+    for i in 0 ..< DataCount:
       data[i] = newSeq[byte](BufferSize)
       recovered[i] = newSeq[byte](BufferSize)
 
-      var
-        str = TestString & " " & $i
+      var str = TestString & " " & $i
 
       copyMem(addr data[i][0], addr str[0], str.len)
 
-    for i in 0..<ParityCount:
+    for i in 0 ..< ParityCount:
       parity[i] = newSeq[byte](BufferSize)
 
     encoder.encode(data, parity).tryGet()
 
-    var
-      data1 = data[0]
+    var data1 = data[0]
 
     data[0].setLen(0)
     parity[0].setLen(0)
@@ -199,7 +198,8 @@ suite "Leopard Encode/Decode":
     try:
       encoder = LeoEncoder.init(bufSize, buffers, parity).tryGet()
       decoder = LeoDecoder.init(bufSize, buffers, parity).tryGet()
-      testPackets(buffers, parity, bufSize, dataLoses, parityLoses, encoder, decoder).tryGet()
+      testPackets(buffers, parity, bufSize, dataLoses, parityLoses, encoder, decoder)
+      .tryGet()
     finally:
       encoder.free()
       decoder.free()
@@ -217,7 +217,8 @@ suite "Leopard Encode/Decode":
     try:
       encoder = LeoEncoder.init(bufSize, buffers, parity).tryGet()
       decoder = LeoDecoder.init(bufSize, buffers, parity).tryGet()
-      testPackets(buffers, parity, bufSize, dataLoses, parityLoses, encoder, decoder).tryGet()
+      testPackets(buffers, parity, bufSize, dataLoses, parityLoses, encoder, decoder)
+      .tryGet()
     finally:
       encoder.free()
       decoder.free()
@@ -235,7 +236,8 @@ suite "Leopard Encode/Decode":
     try:
       encoder = LeoEncoder.init(bufSize, buffers, parity).tryGet()
       decoder = LeoDecoder.init(bufSize, buffers, parity).tryGet()
-      testPackets(buffers, parity, bufSize, dataLoses, parityLoses, encoder, decoder).tryGet()
+      testPackets(buffers, parity, bufSize, dataLoses, parityLoses, encoder, decoder)
+      .tryGet()
     finally:
       encoder.free()
       decoder.free()
@@ -253,7 +255,8 @@ suite "Leopard Encode/Decode":
     try:
       encoder = LeoEncoder.init(bufSize, buffers, parity).tryGet()
       decoder = LeoDecoder.init(bufSize, buffers, parity).tryGet()
-      testPackets(buffers, parity, bufSize, dataLoses, parityLoses, encoder, decoder).tryGet()
+      testPackets(buffers, parity, bufSize, dataLoses, parityLoses, encoder, decoder)
+      .tryGet()
     finally:
       encoder.free()
       decoder.free()
@@ -271,7 +274,8 @@ suite "Leopard Encode/Decode":
     try:
       encoder = LeoEncoder.init(bufSize, buffers, parity).tryGet()
       decoder = LeoDecoder.init(bufSize, buffers, parity).tryGet()
-      testPackets(buffers, parity, bufSize, dataLoses, parityLoses, encoder, decoder).tryGet()
+      testPackets(buffers, parity, bufSize, dataLoses, parityLoses, encoder, decoder)
+      .tryGet()
     finally:
       encoder.free()
       decoder.free()
@@ -289,7 +293,8 @@ suite "Leopard Encode/Decode":
     try:
       encoder = LeoEncoder.init(bufSize, buffers, parity).tryGet()
       decoder = LeoDecoder.init(bufSize, buffers, parity).tryGet()
-      testPackets(buffers, parity, bufSize, dataLoses, parityLoses, encoder, decoder).tryGet()
+      testPackets(buffers, parity, bufSize, dataLoses, parityLoses, encoder, decoder)
+      .tryGet()
     finally:
       encoder.free()
       decoder.free()
@@ -307,23 +312,25 @@ suite "Leopard Encode/Decode":
     try:
       encoder = LeoEncoder.init(bufSize, buffers, parity).tryGet()
       decoder = LeoDecoder.init(bufSize, buffers, parity).tryGet()
-      testPackets(buffers, parity, bufSize, dataLoses, parityLoses, encoder, decoder).tryGet()
+      testPackets(buffers, parity, bufSize, dataLoses, parityLoses, encoder, decoder)
+      .tryGet()
     finally:
       encoder.free()
       decoder.free()
 
 suite "Leopard use same encoder/decoder multiple times":
-    var
-      encoder: LeoEncoder
-      decoder: LeoDecoder
+  var
+    encoder: LeoEncoder
+    decoder: LeoDecoder
 
-    try:
-      encoder = LeoEncoder.init(4096, 800, 800).tryGet()
-      decoder = LeoDecoder.init(4096, 800, 800).tryGet()
-      for i in 0..10:
-        let lost = 40 * i
-        test "Encode/Decode using same encoder/decoder - lost data = " & $lost & " lost parity = " & $lost:
-          testPackets(800, 800, 4096, 40 * i, 40 * i, encoder, decoder).tryGet()
-    finally:
-      encoder.free()
-      decoder.free()
+  try:
+    encoder = LeoEncoder.init(4096, 800, 800).tryGet()
+    decoder = LeoDecoder.init(4096, 800, 800).tryGet()
+    for i in 0 .. 10:
+      let lost = 40 * i
+      test "Encode/Decode using same encoder/decoder - lost data = " & $lost &
+        " lost parity = " & $lost:
+        testPackets(800, 800, 4096, 40 * i, 40 * i, encoder, decoder).tryGet()
+  finally:
+    encoder.free()
+    decoder.free()

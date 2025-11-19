@@ -100,7 +100,16 @@ const
 
   LeopardExtraLinkerFlags {.strdefine.} = ""
 
+proc getLeopardPortableBuildTarget(): string =
+  # If the build output should be portable (e.g. we're building in CI and going to ship the binaries)
+  # then we must set leopard's portable build target.
+  when defined(nimleopard_portable_build) and defined(amd64):
+    if defined(windows) or defined(unix):
+      return "-DLEOPARD_PORTABLE_BUILD_TARGET=x86-64-v3"
+  return ""
+
 static:
+  let leopardBuildTarget = getLeopardPortableBuildTarget()
   if defined(windows):
     func pathUnix2Win(path: string): string =
       gorge("cygpath -w " & path.strip).strip
@@ -124,7 +133,7 @@ static:
       let cmd =
         @[
           "cd", buildDirUnix, "&& cmake", leopardDirUnix, LeopardCmakeFlags,
-          "&& make libleopard",
+          leopardBuildTarget, "&& make libleopard",
         ]
       echo "\nBuilding Leopard-RS: " & cmd.join(" ")
       let (output, exitCode) = bashEx cmd
@@ -139,7 +148,7 @@ static:
       discard gorge "mkdir -p " & buildDir
       let cmd =
         "cd " & buildDir & " && cmake " & LeopardDir & " " & LeopardCmakeFlags &
-        " && make libleopard"
+        " " & leopardBuildTarget & " && make libleopard"
       echo "\nBuilding Leopard-RS: " & cmd
       let (output, exitCode) = gorgeEx cmd
       echo output

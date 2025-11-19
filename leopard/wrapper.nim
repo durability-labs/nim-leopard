@@ -100,33 +100,16 @@ const
 
   LeopardExtraLinkerFlags {.strdefine.} = ""
 
-proc overrideCMakeMarch() =
-  # vendor/leopard/CMakeLists.txt defined "-march=native" explicitly
-  # it provides no means to override this.
-  # Because of this, when we build binaries intended to be delivered
-  # they may contain instructions available on the build system that are
-  # not necessarily available on the user system.
-  # To be able to build portable binaries, we have no choice but
-  # to modify the CMakeLists.txt
+proc getLeopardPortableBuildTarget(): string =
+  # If the build output should be portable (e.g. we're building in CI and going to ship the binaries)
+  # then we must set leopard's portable build target.
   when defined(nimleopard_portable_build) and defined(amd64):
     if defined(windows) or defined(unix):
-      let
-        cmakeFile = joinPath(LeopardDir, "CMakeLists.txt")
-        searchTarget = " -march=native"
-        replaceTarget = " -march=x86-64-v3"
-      
-      echo "Applying portable-build override on CMakeLists.txt..."
-      
-      try:
-        let replaced = readFile(cmakeFile).replace(searchTarget, replaceTarget)
-        
-        writeFile(cmakeFile, replaced)
-      except IOError as err:
-        raiseAssert("Failed to modify CMakeLists.txt for portable build: " & err.msg)
-
+      return "-DLEOPARD_PORTABLE_BUILD_TARGET=x86-64-v3"
+  return ""
 
 static:
-  overrideCMakeMarch()
+  let leopardBuildTarget = getLeopardPortableBuildTarget()
   if defined(windows):
     func pathUnix2Win(path: string): string =
       gorge("cygpath -w " & path.strip).strip
@@ -150,7 +133,7 @@ static:
       let cmd =
         @[
           "cd", buildDirUnix, "&& cmake", leopardDirUnix, LeopardCmakeFlags,
-          "&& make libleopard",
+          leopardBuildTarget, "&& make libleopard",
         ]
       echo "\nBuilding Leopard-RS: " & cmd.join(" ")
       let (output, exitCode) = bashEx cmd
@@ -165,7 +148,7 @@ static:
       discard gorge "mkdir -p " & buildDir
       let cmd =
         "cd " & buildDir & " && cmake " & LeopardDir & " " & LeopardCmakeFlags &
-        " && make libleopard"
+        " " & leopardBuildTarget & " && make libleopard"
       echo "\nBuilding Leopard-RS: " & cmd
       let (output, exitCode) = gorgeEx cmd
       echo output
